@@ -146,7 +146,7 @@ func (m cookiePromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				ok, err := validateCookie(Config.Cookie)
 				if err != nil {
-					m.errMsg = "Cookie check failed."
+					m.errMsg = "Cookie check failed: " + err.Error() + "."
 					return m, nil
 				}
 				if !ok {

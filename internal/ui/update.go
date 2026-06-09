@@ -320,7 +320,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			m.appendMessage(getter.DanmuMsg{
 				Author:  "system",
-				Content: "Cookie check failed in background; some requests may be delayed or fail",
+				Content: "Cookie validation failed: " + msg.err.Error(),
 				Type:    "NOTICE_MSG",
 				Time:    time.Now(),
 			})

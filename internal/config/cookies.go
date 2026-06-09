@@ -94,14 +94,22 @@ func validateCookie(cookie string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	return parseCookieValidationResponse(body)
+}
+
+func parseCookieValidationResponse(body []byte) (bool, error) {
 	code := gjson.GetBytes(body, "code").Int()
 	if code == 0 {
 		return gjson.GetBytes(body, "data.mid").Int() > 0, nil
 	}
-	if code == -101 {
-		return false, nil
+	message := gjson.GetBytes(body, "message").String()
+	if message == "" {
+		message = gjson.GetBytes(body, "msg").String()
 	}
-	return false, fmt.Errorf("code %d", code)
+	if message == "" {
+		return false, fmt.Errorf("Bilibili code %d", code)
+	}
+	return false, fmt.Errorf("Bilibili code %d: %s", code, message)
 }
 
 func normalizeCookieHeader(cookie string) string {
