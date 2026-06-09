@@ -327,7 +327,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else if !msg.ok {
 			m.appendMessage(getter.DanmuMsg{
 				Author:  "system",
-				Content: "Cookie appears invalid; update ~/.config/bili/config.toml if requests fail",
+				Content: "Configured cookie was rejected by Bilibili; update ~/.config/bili/config.toml if requests fail",
 				Type:    "NOTICE_MSG",
 				Time:    time.Now(),
 			})

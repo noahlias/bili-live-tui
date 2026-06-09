@@ -47,6 +47,18 @@ func TestSetAuthFromCookieHeaderReportsMissingBiliJCT(t *testing.T) {
 	}
 }
 
+func TestCookieIsUnsetOnlyForEmptyOrDefaultCookie(t *testing.T) {
+	if !cookieIsUnset("") {
+		t.Fatal("cookieIsUnset(empty) = false, want true")
+	}
+	if !cookieIsUnset("从你BILIBILI的请求里抓一个Cookie") {
+		t.Fatal("cookieIsUnset(default placeholder) = false, want true")
+	}
+	if cookieIsUnset("DedeUserID=10001; SESSDATA=session-token") {
+		t.Fatal("cookieIsUnset(explicit cookie) = true, want false")
+	}
+}
+
 func quoteTOMLString(s string) string {
 	return `"` + strings.ReplaceAll(s, `"`, `\"`) + `"`
 }

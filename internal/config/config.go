@@ -51,13 +51,13 @@ func Init() bool {
 		fmt.Printf("Error decoding config.toml: %s\n", err)
 		return false
 	}
-	if strings.TrimSpace(Config.Cookie) == "" || Config.Cookie == "从你BILIBILI的请求里抓一个Cookie" {
+	if cookieIsUnset(Config.Cookie) {
 		if ok, errMsg := tryImportChromeCookie(configFile); ok {
 			// Config.Cookie already updated and saved
 		} else if errMsg != "" {
 			fmt.Println("Chrome import failed:", errMsg)
 		}
-		if strings.TrimSpace(Config.Cookie) == "" || Config.Cookie == "从你BILIBILI的请求里抓一个Cookie" {
+		if cookieIsUnset(Config.Cookie) {
 			return handleCookieFlow(configFile)
 		}
 	}
@@ -105,17 +105,19 @@ func Init() bool {
 		Config.Background = "NONE"
 	}
 
-	if ok, _ := setAuthFromCookieHeader(Config.Cookie); !ok {
-		if ok, errMsg := tryImportChromeCookie(configFile); !ok && errMsg != "" {
-			fmt.Println("Chrome import failed:", errMsg)
+	if ok, errMsg := setAuthFromCookieHeader(Config.Cookie); !ok {
+		if errMsg != "" {
+			fmt.Println("Configured cookie invalid:", errMsg)
 		}
-		if ok, _ := setAuthFromCookieHeader(Config.Cookie); !ok {
-			return handleCookieFlow(configFile)
-		}
+		return handleCookieFlow(configFile)
 	}
 	return true
 }
 
 func ValidateCookie(cookie string) (bool, error) {
 	return validateCookie(cookie)
+}
+
+func cookieIsUnset(cookie string) bool {
+	return strings.TrimSpace(cookie) == "" || cookie == "从你BILIBILI的请求里抓一个Cookie"
 }
