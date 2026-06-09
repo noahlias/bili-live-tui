@@ -105,36 +105,11 @@ func Init() bool {
 		Config.Background = "NONE"
 	}
 
-	kvs := parseCookies(Config.Cookie)
-	Auth.SESSDATA = kvs["SESSDATA"]
-	Auth.DedeUserID = kvs["DedeUserID"]
-	Auth.DedeUserIDCkMd5 = kvs["DedeUserID__ckMd5"]
-	Auth.BiliJCT = kvs["bili_jct"]
-	if Auth.SESSDATA == "" || Auth.DedeUserID == "" || Auth.BiliJCT == "" {
-		if ok, errMsg := tryImportChromeCookie(configFile); ok {
-			kvs = parseCookies(Config.Cookie)
-			Auth.SESSDATA = kvs["SESSDATA"]
-			Auth.DedeUserID = kvs["DedeUserID"]
-			Auth.DedeUserIDCkMd5 = kvs["DedeUserID__ckMd5"]
-			Auth.BiliJCT = kvs["bili_jct"]
-		} else if errMsg != "" {
+	if ok, _ := setAuthFromCookieHeader(Config.Cookie); !ok {
+		if ok, errMsg := tryImportChromeCookie(configFile); !ok && errMsg != "" {
 			fmt.Println("Chrome import failed:", errMsg)
 		}
-		if Auth.SESSDATA == "" || Auth.DedeUserID == "" || Auth.BiliJCT == "" {
-			return handleCookieFlow(configFile)
-		}
-	}
-	if !isSaneCookieValue(Auth.SESSDATA) || !isSaneCookieValue(Auth.BiliJCT) || !isSaneCookieValue(Auth.DedeUserID) || (Auth.DedeUserIDCkMd5 != "" && !isSaneCookieValue(Auth.DedeUserIDCkMd5)) {
-		if ok, errMsg := tryImportChromeCookie(configFile); ok {
-			kvs = parseCookies(Config.Cookie)
-			Auth.SESSDATA = kvs["SESSDATA"]
-			Auth.DedeUserID = kvs["DedeUserID"]
-			Auth.DedeUserIDCkMd5 = kvs["DedeUserID__ckMd5"]
-			Auth.BiliJCT = kvs["bili_jct"]
-		} else if errMsg != "" {
-			fmt.Println("Chrome import failed:", errMsg)
-		}
-		if !isSaneCookieValue(Auth.SESSDATA) || !isSaneCookieValue(Auth.BiliJCT) || !isSaneCookieValue(Auth.DedeUserID) || (Auth.DedeUserIDCkMd5 != "" && !isSaneCookieValue(Auth.DedeUserIDCkMd5)) {
+		if ok, _ := setAuthFromCookieHeader(Config.Cookie); !ok {
 			return handleCookieFlow(configFile)
 		}
 	}

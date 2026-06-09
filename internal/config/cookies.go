@@ -11,6 +11,8 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+var requiredCookieFields = []string{"SESSDATA", "DedeUserID", "bili_jct"}
+
 func printCookieHelp(configFile string) {
 	fmt.Println("Cookie missing or invalid.")
 	fmt.Println("Open https://live.bilibili.com in your browser, copy the full Cookie header, and paste it into:")
@@ -31,6 +33,44 @@ func parseCookies(cookieStr string) map[string]string {
 		out[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
 	}
 	return out
+}
+
+func authFromCookieHeader(cookie string) (CookieAuth, []string, []string) {
+	kvs := parseCookies(cookie)
+	auth := CookieAuth{
+		SESSDATA:        kvs["SESSDATA"],
+		DedeUserID:      kvs["DedeUserID"],
+		DedeUserIDCkMd5: kvs["DedeUserID__ckMd5"],
+		BiliJCT:         kvs["bili_jct"],
+	}
+	missing := make([]string, 0, len(requiredCookieFields))
+	for _, field := range requiredCookieFields {
+		if kvs[field] == "" {
+			missing = append(missing, field)
+		}
+	}
+	invalid := make([]string, 0, len(requiredCookieFields)+1)
+	for _, field := range requiredCookieFields {
+		if kvs[field] != "" && !isSaneCookieValue(kvs[field]) {
+			invalid = append(invalid, field)
+		}
+	}
+	if auth.DedeUserIDCkMd5 != "" && !isSaneCookieValue(auth.DedeUserIDCkMd5) {
+		invalid = append(invalid, "DedeUserID__ckMd5")
+	}
+	return auth, missing, invalid
+}
+
+func setAuthFromCookieHeader(cookie string) (bool, string) {
+	auth, missing, invalid := authFromCookieHeader(cookie)
+	Auth = auth
+	if len(missing) > 0 {
+		return false, "cookie missing required fields: " + strings.Join(missing, ", ")
+	}
+	if len(invalid) > 0 {
+		return false, "cookie has invalid fields: " + strings.Join(invalid, ", ")
+	}
+	return true, ""
 }
 
 func validateCookie(cookie string) (bool, error) {

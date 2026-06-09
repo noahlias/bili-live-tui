@@ -94,9 +94,13 @@ func loadConfigFromFile(configFile string) error {
 	if _, err := toml.Decode(string(data), &Config); err != nil {
 		return err
 	}
-	if Config.Cookie != "" && !isSaneCookieValue(Config.Cookie) {
-		Config.Cookie = ""
-		_ = saveConfig(configFile)
+	if Config.Cookie != "" {
+		Config.Cookie = normalizeCookieHeader(Config.Cookie)
+		_, _, invalid := authFromCookieHeader(Config.Cookie)
+		if len(invalid) > 0 {
+			Config.Cookie = ""
+			_ = saveConfig(configFile)
+		}
 	}
 	return nil
 }

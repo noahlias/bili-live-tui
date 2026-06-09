@@ -51,13 +51,8 @@ func tryImportChromeCookieWithPassword(configFile string, password string) (bool
 
 func applyImportedCookie(configFile string, cookie string) (bool, string) {
 	Config.Cookie = normalizeCookieHeader(cookie)
-	kvs := parseCookies(Config.Cookie)
-	Auth.SESSDATA = kvs["SESSDATA"]
-	Auth.DedeUserID = kvs["DedeUserID"]
-	Auth.DedeUserIDCkMd5 = kvs["DedeUserID__ckMd5"]
-	Auth.BiliJCT = kvs["bili_jct"]
-	if Auth.SESSDATA == "" || Auth.DedeUserID == "" || Auth.BiliJCT == "" {
-		return false, "cookie fields missing"
+	if ok, errMsg := setAuthFromCookieHeader(Config.Cookie); !ok {
+		return false, errMsg
 	}
 	if err := saveConfig(configFile); err != nil {
 		return false, err.Error()

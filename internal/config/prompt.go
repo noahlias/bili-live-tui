@@ -134,19 +134,14 @@ func (m cookiePromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			if m.step == cookieStepPaste {
-				cookie := strings.TrimSpace(m.input.Value())
+				cookie := normalizeCookieHeader(m.input.Value())
 				if cookie == "" {
 					m.errMsg = "Cookie is empty."
 					return m, nil
 				}
 				Config.Cookie = cookie
-				kvs := parseCookies(Config.Cookie)
-				Auth.SESSDATA = kvs["SESSDATA"]
-				Auth.DedeUserID = kvs["DedeUserID"]
-				Auth.DedeUserIDCkMd5 = kvs["DedeUserID__ckMd5"]
-				Auth.BiliJCT = kvs["bili_jct"]
-				if Auth.SESSDATA == "" || Auth.DedeUserID == "" || Auth.BiliJCT == "" {
-					m.errMsg = "Cookie missing required fields."
+				if ok, errMsg := setAuthFromCookieHeader(Config.Cookie); !ok {
+					m.errMsg = strings.ToUpper(errMsg[:1]) + errMsg[1:] + "."
 					return m, nil
 				}
 				ok, err := validateCookie(Config.Cookie)
